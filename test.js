@@ -16,7 +16,7 @@ async function test() {
   try {
     const glob = injector.get('glob')
   } catch (err) {
-    console.log(err)
+    // console.log(err)
     console.log(err.message === 'Dependency glob was not defined')
   }
 
@@ -24,6 +24,7 @@ async function test() {
   const glob = injector.get('glob')
   console.log(!!glob)
 
+  // should throw
   injector.get('othermod')
 }
 

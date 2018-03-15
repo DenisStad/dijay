@@ -21,7 +21,7 @@ module.exports = function() {
   async function inject() {
     let currentRequireStack = []
 
-    async function requireInjected(name) {
+    function requireInjected(name) {
       if (dependencies[name + '/index']) {
         name += '/index'
       }
@@ -40,19 +40,32 @@ module.exports = function() {
       }
       currentRequireStack.push(name)
       if (!dependencies[name].resolved) {
-        await resolveDependency(name)
+        const resolver = resolveDependency(name)
+        if (resolver && resolver.then) {
+          return resolver.then(() => {
+            currentRequireStack.pop()
+            return dependencies[name].resolved
+          })
+        }
       }
       currentRequireStack.pop()
       return dependencies[name].resolved
     }
 
-    async function resolveDependency(name) {
+    function resolveDependency(name) {
       if (dependencies[name].resolved) {
         return
       }
       const { original } = dependencies[name]
       if (typeof original === 'function') {
-        dependencies[name].resolved = await original(requireInjected)
+        const value = original(requireInjected, di)
+        if (value.then) {
+          return value.then(res => {
+            dependencies[name].resolved = res
+          })
+        } else {
+          dependencies[name].resolved = value
+        }
       } else {
         dependencies[name].resolved = original
       }
@@ -96,7 +109,7 @@ module.exports = function() {
     isMountingModules = true
   }
 
-  return {
+  const di = {
     dependencies,
     mountDir,
     mountModules,
@@ -104,4 +117,6 @@ module.exports = function() {
     inject,
     get
   }
+
+  return di
 }
