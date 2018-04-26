@@ -1,9 +1,3 @@
-const glob = require('glob')
-const path = require('path')
-const fs = require('fs')
-
-
-
 module.exports = function() {
 
   // CORE: defining and injecting
@@ -98,6 +92,9 @@ module.exports = function() {
   // HELPERS
 
   function mountDir(dirPath) {
+    const glob = require('glob')
+    const path = require('path')
+
     const paths = glob.sync(dirPath + '/**/*.js')
     for (let p of paths) {
       const name = path.relative(dirPath, p).slice(0, -3)
